@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест для модераторов CS2</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #2a2a2a;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            max-width: 700px;
+            width: 100%;
+            padding: 30px;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        h1, h2 {
+            color: #ffcc00;
+            margin-bottom: 15px;
+        }
+
+        p { line-height: 1.6; margin-bottom: 15px; }
+
+        .input-group { margin-bottom: 15px; }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #aaa;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #ffcc00;
+        }
+
+        .btn {
+            background-color: #ffcc00;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover { background-color: #e6b800; }
+        .btn:disabled { background-color: #555; color: #888; cursor: not-allowed; }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #444;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #ffcc00;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-counter {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .media-container { margin: 15px 0; text-align: center; }
+
+        .media-container img,
+        .media-container video {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        .media-container iframe {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+            border: 2px solid #444;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover { background-color: #444; border-color: #888; }
+        .option-btn.correct { background-color: #2e7d32; border-color: #4caf50; color: white; }
+        .option-btn.incorrect { background-color: #c62828; border-color: #f44336; color: white; }
+
+        .explanation-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #333;
+            border-left: 4px solid #ffcc00;
+        }
+
+        .explanation-container p { color: #ccc; margin-bottom: 10px; }
+        .hidden { display: none; }
+
+        #result-message {
+            font-size: 18px;
+            color: #ffcc00;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        #send-status {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Экран приветствия -->
+        <div id="welcome-screen" class="screen active">
+            <h1>Проверка знаний модератора</h1>
+            <p>Привет! Этот тест поможет тебе понять, как правильно проверять игроков на читы в CS2. В конце ты увидишь свой результат и пояснения к ошибкам.</p>
+            
+            <div class="input-group">
+                <label for="mod-nick">Твой ник (как тебя зовут в команде):</label>
+                <input type="text" id="mod-nick" placeholder="Например: Вася_Модератор">
+            </div>
+            <div class="input-group">
+                <label for="mod-id">Твой ID на сайте CS2Reda (или Steam ID):</label>
+                <input type="text" id="mod-id" placeholder="Например: 12345678">
+            </div>
+
+            <button id="start-btn" class="btn">Начать тест</button>
+        </div>
+
+        <!-- Экран с вопросами -->
+        <div id="quiz-screen" class="screen">
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div class="question-counter" id="question-counter">Вопрос 1 из 3</div>
+
+            <h2 id="question-text">Текст вопроса</h2>
+            
+            <div id="media-container" class="media-container"></div>
+
+            <div id="options-container" class="options-container"></div>
+
+            <div id="explanation-container" class="explanation-container hidden">
+                <p id="explanation-text"></p>
+                <button id="next-btn" class="btn">Следующий вопрос</button>
+            </div>
+        </div>
+
+        <!-- Экран результатов -->
+        <div id="result-screen" class="screen">
+            <h1>Тест завершён!</h1>
+            <p>Твой результат: <span id="score-display">0/0</span></p>
+            <p id="result-message"></p>
+            <button id="send-telegram-btn" class="btn">Отправить результат в Telegram</button>
+            <p id="send-status" class="hidden"></p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 1. НАСТРОЙКИ TELEGRAM (ВСТАВЬ СВОИ ДАННЫЕ)
+        // ============================================
+        const TELEGRAM_BOT_TOKEN = "9181791429:AAHICA7vqlCYxYjWb2YPScjg1cds5psGUeI";
+        const TELEGRAM_CHAT_ID = "1387912682";
+
+        // ============================================
+        // 2. ВОПРОСЫ ТЕСТА (РЕДАКТИРУЙ ЗДЕСЬ)
+        // ============================================
+        // correctAnswer — индекс правильного ответа (0 - первый, 1 - второй, 2 - третий).
+        // media — ссылка на картинку/гифку или YouTube. Если не нужна, оставь "".
+        
+        const questions = [
+            {
+                question: "Посмотрите на картинку. Это читы?",
+                media: "https://sun9-72.vkuserphoto.ru/s/v1/ig2/mVLLR0Z9eOq6LWHROZahAXaMbCfvAihZclAidI33pPNNyOEww_t5ukeScNnYlFnUpWhKFIt1MfUiut2lB9zqWJcj.jpg?quality=95&as=32x24,48x36,72x53,108x80,160x119,240x178,360x267,480x356,540x400,640x474,720x534,1027x761&from=bu&u=NxkDEnhyFD1aoLvRGBVSuPuCyQtQ04N-LSfj6-Ec8EI&cs=1027x0", // ЗАМЕНИ на свою ссылку
+                options: [
+                    "Да, это 100% вх (Wallhack)",
+                    "Нет, это может быть легальный пиксель-пик",
+                    "Нет, это просто везение"
+                ],
+                correctAnswer: 1,
+                explanation: "Это не обязательно вх. В CS2 есть легальные позиции, откуда видно силуэт через дым. Всегда проверяй демку, прежде чем банить."
+            },
+            {
+                question: "Игрок резко поворачивается на 180 градусов и убивает противника за стеной. Что это?",
+                media: "",
+                options: ["Аимбот", "Триггербот", "Спуффер"],
+                correctAnswer: 0,
+                explanation: "Это классический аимбот. Резкий поворот камеры на 180 градусов и мгновенное убийство — характерный признак."
+            },
+            {
+                question: "Как правильно проверить игрока, если у тебя нет демки, а только жалоба?",
+                media: "",
+                options: [
+                    "Забанить сразу, чтобы не рисковать",
+                    "Написать игроку в чат и попросить показать игру",
+                    "Запросить демку у игрока или посмотреть его последние матчи в истории",
+                    "Ничего не делать, это не твоя проблема"
+                ],
+                correctAnswer: 2,
+                explanation: "Никогда не бань без доказательств. Всегда запрашивай демку или смотри историю матчей."
+            }
+        ];
+
+        // ============================================
+        // 3. ЛОГИКА ТЕСТА (НЕ ТРОГАЙ)
+        // ============================================
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userNick = "";
+        let userId = "";
+        let userAnswers = [];
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const sendTelegramBtn = document.getElementById('send-telegram-btn');
+        const modNickInput = document.getElementById('mod-nick');
+        const modIdInput = document.getElementById('mod-id');
+        const questionText = document.getElementById('question-text');
+        const mediaContainer = document.getElementById('media-container');
+        const optionsContainer = document.getElementById('options-container');
+        const explanationContainer = document.getElementById('explanation-container');
+        const explanationText = document.getElementById('explanation-text');
+        const progressBar = document.getElementById('progress-bar');
+        const questionCounter = document.getElementById('question-counter');
+        const scoreDisplay = document.getElementById('score-display');
+        const resultMessage = document.getElementById('result-message');
+        const sendStatus = document.getElementById('send-status');
+
+        startBtn.addEventListener('click', () => {
+            userNick = modNickInput.value.trim();
+            userId = modIdInput.value.trim();
+            if (!userNick || !userId) {
+                alert("Пожалуйста, заполни оба поля: ник и ID.");
+                return;
+            }
+            welcomeScreen.classList.remove('active');
+            quizScreen.classList.add('active');
+            loadQuestion();
+        });
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            questionText.textContent = q.question;
+            questionCounter.textContent = `Вопрос ${currentQuestionIndex + 1} из ${questions.length}`;
+            const progress = (currentQuestionIndex / questions.length) * 100;
+            progressBar.style.width = progress + '%';
+
+            mediaContainer.innerHTML = '';
+            if (q.media && q.media.trim() !== "") {
+                if (q.media.includes('youtube.com') || q.media.includes('youtu.be')) {
+                    let videoId = '';
+                    if (q.media.includes('youtu.be/')) {
+                        videoId = q.media.split('youtu.be/')[1].split('?')[0];
+                    } else {
+                        videoId = q.media.split('v=')[1].split('&')[0];
+                    }
+                    mediaContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>`;
+                } else {
+                    mediaContainer.innerHTML = `<img src="${q.media}" alt="Медиа к вопросу">`;
+                }
+            }
+
+            optionsContainer.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.dataset.index = index;
+                btn.addEventListener('click', () => selectAnswer(index));
+                optionsContainer.appendChild(btn);
+            });
+
+            explanationContainer.classList.add('hidden');
+        }
+
+        function selectAnswer(selectedIndex) {
+            const q = questions[currentQuestionIndex];
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = selectedIndex === q.correctAnswer;
+            buttons[q.correctAnswer].classList.add('correct');
+            if (!isCorrect) {
+                buttons[selectedIndex].classList.add('incorrect');
+                userAnswers.push({
+                    question: q.question,
+                    userAnswer: q.options[selectedIndex],
+                    correctAnswer: q.options[q.correctAnswer]
+                });
+            } else {
+                score++;
+            }
+
+            explanationText.textContent = q.explanation;
+            explanationContainer.classList.remove('hidden');
+
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.textContent = "Показать результаты";
+            } else {
+                nextBtn.textContent = "Следующий вопрос";
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        function showResults() {
+            quizScreen.classList.remove('active');
+            resultScreen.classList.add('active');
+            scoreDisplay.textContent = `${score}/${questions.length}`;
+            if (score === questions.length) {
+                resultMessage.textContent = "Идеально! Ты знаешь своё дело.";
+            } else if (score >= questions.length / 2) {
+                resultMessage.textContent = "Неплохо, но есть над чем поработать.";
+            } else {
+                resultMessage.textContent = "Стоит повторить материал и пройти тест снова.";
+            }
+
+            sendTelegramBtn.addEventListener('click', () => {
+                sendTelegramBtn.disabled = true;
+                sendStatus.classList.remove('hidden');
+                sendStatus.textContent = "Отправка...";
+
+                const message = `
+🎮 *Результат теста модератора*
+👤 Ник: ${userNick}
+🆔 ID: ${userId}
+✅ Счёт: ${score}/${questions.length}
+${userAnswers.length > 0 ? '❌ Ошибки:\n' + userAnswers.map((ua, i) => `${i+1}. ${ua.question}\n   Твой ответ: ${ua.userAnswer}\n   Правильно: ${ua.correctAnswer}`).join('\n\n') : '🌟 Без ошибок!'}
+                `;
+
+                fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ok) {
+                        sendStatus.textContent = "✅ Результат успешно отправлен!";
+                        sendStatus.style.color = "#4caf50";
+                    } else {
+                        sendStatus.textContent = "❌ Ошибка отправки. Проверь токен и Chat ID.";
+                        sendStatus.style.color = "#f44336";
+                        sendTelegramBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    sendStatus.textContent = "❌ Ошибка сети. Попробуй позже.";
+                    sendStatus.style.color = "#f44336";
+                    sendTelegramBtn.disabled = false;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
